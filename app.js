@@ -1,111 +1,125 @@
-// //LIST CONTROLLER
-
-// const listController = (function (){
-
-
-
-// }) ();
-
-// //UI CONTROLLER
-// const UIController = (function (){
-    
-//     return {
-//         getInput : function () {
-//             return document.querySelector(".add__description").value;
-//         } , 
-
-
-//         addListItem: function (input) {
-//             let html;
-//             html = "<li></li>" ;
-//             newHtml = html.replace('', input);
-
-//             document.querySelector('.myUL').insertAdjacentHTML('beforeend', newHtml);
-//         }
-             
-        
-
-     
-
-// }
-// }) ();
-
-// //GLOBAL APP CONTROLLER
-// let globe = (function  (listCtrl, UICtrl) {
-//     ctrlAddItem =  () => {
-
-//         let read = UIController.getInput();
-//         UIController.addListItem(read);
-// }
-
-//     document.querySelector(".addBtn").addEventListener('click', ctrlAddItem);
-//     document.addEventListener('keypress', function (event){
-//         if (event.keyCode === 13 || event.which === 13){
-//             ctrlAddItem();
-//         }
-//     });  
-    
-
-
-// })(listController, UIController);
-
-// Create a "close" button and append it to each list item
-let myNodelist = document.getElementsByTagName("LI");
-let i;
-for (i = 0; i < myNodelist.length; i++) {
-    let span = document.createElement("SPAN");
-    let txt = document.createTextNode("\u00D7");
-  span.className = "close";
-  span.appendChild(txt);
-  myNodelist[i].appendChild(span);
-}
-
-// Click on a close button to hide the current list item
-let close = document.getElementsByClassName("close");
-for (i = 0; i < close.length; i++) {
-  close[i].onclick = function() {
-    let div = this.parentElement;
-    div.style.display = "none";
+class Task {
+  constructor(title){
+      this.title = title;
   }
 }
 
-// Add a "checked" symbol when clicking on a list item
-let list = document.querySelector('ul');
-list.addEventListener('click', function(ev) {
-  if (ev.target.tagName === 'LI') {
-    ev.target.classList.toggle('checked');
-  }
-}, false);
+//UI CLASS
+class UI {
+  static displayTasks () {
+ 
+     const tasks = Store.getTasks(); 
 
-// Create a new list item when clicking on the "Add" button
-function newElement() {
-    let li = document.createElement("li");
-    let inputValue = document.getElementById("myInput").value;
-    let t = document.createTextNode(inputValue);
-  li.appendChild(t);
-  if (inputValue === '') {
-    alert("You must write something!");
+     tasks.forEach((task) => UI.addTaskToList(task));
+  }
+  static addTaskToList(task) {
+      const list = document.querySelector('#task-list');
+      const row = document.createElement('tr');
+
+      row.innerHTML = `
+          <td>${task.title}</td>
+          <td><a href = "#" class = "btn btn-danger btn-sm delete">X</a></a></td>
+      `;
+      list.appendChild(row);
+  }
+
+  static deleteTask (el) {
+      if (el.classList.contains('delete')) {
+          el.parentElement.parentElement.remove();
+      }
+  }
+
+  static showAlert(message, className) {
+      const div = document.createElement('div');
+      div.className = `alert alert-${className}`;
+      div.appendChild(document.createTextNode(message));
+      const container = document.querySelector(".container"); //Grabbed the parent element
+      const form = document.querySelector("#book-form");
+      container.insertBefore(div, form) //insert the div before the form inside the container
+
+      //Vanish in 3 secs
+      setTimeout(() => {
+          document.querySelector('.alert').remove();
+      }, 3000);
+  }
+
+  static clearFields () {
+      document.querySelector('#title').value = '';
+  }
+}
+
+//STORE CLASS (Handles storage withing the browser)
+class Store {
+  static getTasks () {
+      let tasks;
+      if (localStorage.getItem('tasks') === null ) {
+        tasks = [];
+      } else {
+        tasks = JSON.parse(localStorage.getItem('tasks'));
+      }
+      return tasks;
+  }
+
+  static addTask(task) {
+      const tasks = Store.getTasks();
+
+      tasks.push(task);
+
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+  }
+
+  // static removeBook (task) {
+  //     const books = Store.getBooks(); 
+
+  //     books.forEach((task, index) => {
+  //         if (book.isbn === isbn) {
+  //             books.splice(index, 1);
+  //         }
+  //     });
+
+  //     localStorage.setItem('books', JSON.stringify(books));
+  // }
+}
+
+//Event: Display books
+document.addEventListener('DOMContentLoaded', UI.displayTasks);
+//Event: Add a book
+document.querySelector('#todo-form').addEventListener('submit', (e) => {
+  //Prevent default action
+  e.preventDefault();
+  //Get form values
+  const title = document.querySelector('#title').value;
+
+  //Validate
+  if (title === ''){
+      UI.showAlert('Please fill in all fields', 'danger');
   } else {
-    document.getElementById("myUL").appendChild(li);
-  }
-  document.getElementById("myInput").value = "";
+      //Instantiate a book
+  const task = new Task(title);
 
-  let span = document.createElement("SPAN");
-  let txt = document.createTextNode("\u00D7");
-  span.className = "close";
-  span.appendChild(txt);
-  li.appendChild(span);
+  //Add book1 to UI
+  UI.addTaskToList(task);
 
-  for (i = 0; i < close.length; i++) {
-    close[i].onclick = function() {
-        let div = this.parentElement;
-      div.style.display = "none";
-    }
+  //Add book to store
+  Store.addTask(task);
+
+  //Show success message
+  UI.showAlert('Task Added', 'success');
+
+  //Clear fields
+  UI.clearFields();
   }
-}
-document.querySelector(".addBtn").addEventListener('click', newElement);
-document.addEventListener('keypress', function (event){
-         if (event.keyCode === 13 || event.which === 13){
-               newElement();
-            }
-        });
+  
+})
+
+//Event: Remove book
+document.querySelector('#task-list').addEventListener('click', (e) => {
+  //Remove book from UI
+  UI.deleteTask(e.target);
+
+  //Remove book from Store
+  Store.removeTask(e.target.parentElement.previousElementSibling.textContent);
+
+  //Show success message
+  UI.showAlert('Book Removed', 'success');
+})
