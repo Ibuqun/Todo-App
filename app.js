@@ -68,17 +68,17 @@ class Store {
       localStorage.setItem('tasks', JSON.stringify(tasks));
   }
 
-  // static removeBook (task) {
-  //     const books = Store.getBooks(); 
+  static removeTask (task) {
+      const tasks = Store.getTasks(); 
 
-  //     books.forEach((task, index) => {
-  //         if (book.isbn === isbn) {
-  //             books.splice(index, 1);
-  //         }
-  //     });
+      tasks.forEach((task, index) => {
+          if (task.title === title) {
+            tasks.splice(index, 1);
+          }
+      });
 
-  //     localStorage.setItem('books', JSON.stringify(books));
-  // }
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+  }
 }
 
 //Event: Display books
